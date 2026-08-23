@@ -11,7 +11,7 @@ services:
     rootDir: backend
     plan: free
     buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput"
-    startCommand: "python manage.py migrate --noinput && python manage.py ensure_superuser && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"
+    startCommand: "python manage.py migrate --noinput && python manage.py ensure_superuser && python manage.py seed_if_empty && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"
     healthCheckPath: /api/health/
     envVars:
       - key: PYTHON_VERSION
@@ -21,7 +21,7 @@ services:
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
-        value: "science-quiz-backend.onrender.com"
+        value: "science-quiz-backend-nq25.onrender.com"
       - key: CORS_ALLOWED_ORIGINS
         value: "https://science-quiz-frontend.onrender.com"
       - key: DATABASE_URL
@@ -43,4 +43,4 @@ services:
     staticPublishPath: .
     envVars:
       - key: API_BASE_URL
-        value: "https://science-quiz-backend.onrender.com/api"
+        value: "https://science-quiz-backend-nq25.onrender.com/api"
