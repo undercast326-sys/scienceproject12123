@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Science Quiz</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar" id="topbar" hidden>
+  <div class="brand">🔬 Science Quiz</div>
+  <nav>
+    <button class="nav-link" data-nav="subjects">Предметы</button>
+    <button class="nav-link" data-nav="progress">Прогресс</button>
+    <button class="nav-link" id="logout-btn">Выйти</button>
+  </nav>
+</header>
+
+<main id="app">
+
+  <!-- AUTH SCREEN -->
+  <section id="screen-auth" class="screen">
+    <div class="card auth-card">
+      <h1>🔬 Science Quiz</h1>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="login">Log in</button>
+        <button class="tab-btn" data-tab="register">Register</button>
+      </div>
+
+      <form id="login-form" class="tab-panel active">
+        <label>Username
+          <input type="text" id="login-username" required autocomplete="username">
+        </label>
+        <label>Password
+          <input type="password" id="login-password" required autocomplete="current-password">
+        </label>
+        <button type="submit" class="btn primary">Log in</button>
+        <p class="form-error" id="login-error"></p>
+      </form>
+
+      <form id="register-form" class="tab-panel">
+        <label>Username
+          <input type="text" id="register-username" required autocomplete="username">
+        </label>
+        <label>Email (optional)
+          <input type="email" id="register-email" autocomplete="email">
+        </label>
+        <label>Password
+          <input type="password" id="register-password" required minlength="6" autocomplete="new-password">
+        </label>
+        <button type="submit" class="btn primary">Create account</button>
+        <p class="form-error" id="register-error"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- SUBJECTS SCREEN -->
+  <section id="screen-subjects" class="screen">
+    <h1>Выберите предмет</h1>
+    <div id="subjects-grid" class="choice-grid"></div>
+  </section>
+
+  <!-- GRADES SCREEN -->
+  <section id="screen-grades" class="screen">
+    <div class="breadcrumb" id="grades-breadcrumb"></div>
+    <h1>Выберите класс</h1>
+    <div id="grades-grid" class="choice-grid"></div>
+  </section>
+
+  <!-- CHAPTERS SCREEN -->
+  <section id="screen-chapters" class="screen">
+    <div class="breadcrumb" id="chapters-breadcrumb"></div>
+    <h1>Темы</h1>
+    <div id="chapters-grid" class="choice-grid"></div>
+  </section>
+
+  <!-- CHAPTER DETAIL SCREEN (theory -> practice) -->
+  <section id="screen-detail" class="screen">
+    <div class="breadcrumb" id="detail-breadcrumb"></div>
+    <h1 id="detail-topic-name"></h1>
+    <p class="topic-desc" id="detail-topic-desc"></p>
+
+    <h2 class="section-heading">📖 Теория</h2>
+    <div id="theory-list" class="theory-list"></div>
+
+    <div class="card practice-card">
+      <h2 class="section-heading no-margin">✏️ Практика</h2>
+      <p id="practice-summary" class="practice-summary"></p>
+      <button id="start-practice-btn" class="btn primary">Начать практику</button>
+    </div>
+  </section>
+
+  <!-- QUIZ SCREEN -->
+  <section id="screen-quiz" class="screen">
+    <div class="breadcrumb" id="quiz-breadcrumb"></div>
+    <div class="quiz-header">
+      <h1 id="quiz-topic-name"></h1>
+      <div class="quiz-progress-bar">
+        <div id="quiz-progress-fill" class="quiz-progress-fill"></div>
+      </div>
+      <p id="quiz-progress-text"></p>
+    </div>
+
+    <div class="card quiz-card">
+      <p id="quiz-question-prompt" class="question-prompt"></p>
+      <div id="quiz-options" class="quiz-options"></div>
+      <div id="quiz-text-input-wrap" class="quiz-text-input-wrap" hidden>
+        <input type="text" id="quiz-text-input" placeholder="Введите ответ...">
+      </div>
+
+      <div id="quiz-feedback" class="quiz-feedback" hidden></div>
+
+      <div class="quiz-actions">
+        <button id="quiz-submit-btn" class="btn primary">Ответить</button>
+        <button id="quiz-next-btn" class="btn primary" hidden>Далее</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT SCREEN -->
+  <section id="screen-result" class="screen">
+    <div class="card result-card">
+      <h1>Практика завершена!</h1>
+      <p class="result-score" id="result-score"></p>
+      <div class="result-stats" id="result-stats"></div>
+      <div class="quiz-actions">
+        <button class="btn primary" data-nav="chapters">К темам</button>
+        <button class="btn" data-nav="progress">Мой прогресс</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROGRESS SCREEN -->
+  <section id="screen-progress" class="screen">
+    <h1>Мой прогресс</h1>
+    <div class="card progress-card" id="progress-card"></div>
+
+    <h2 class="section-heading">Прогресс по темам</h2>
+    <div id="progress-breakdown" class="progress-breakdown"></div>
+  </section>
+
+</main>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
