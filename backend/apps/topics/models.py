@@ -66,3 +66,13 @@ class ParagraphProgress(models.Model):
 
     def __str__(self):
         return f'{self.user.username} read {self.paragraph_id}'
+
+
+class ContentImport(models.Model):
+    """Which content file was last loaded for a subject, so deploys skip unchanged imports."""
+    source = models.CharField(max_length=100, unique=True)
+    sha256 = models.CharField(max_length=64)
+    imported_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.source} @ {self.sha256[:10]}'

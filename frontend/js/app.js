@@ -33,6 +33,45 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+/* Text with $...$ formulas: plain parts are escaped, formulas go through KaTeX.
+   Newlines become <br>. Falls back to escaped text if KaTeX failed to load. */
+function renderMath(tex) {
+  if (!window.katex) return escapeHtml(tex);
+  try {
+    return window.katex.renderToString(tex, { throwOnError: false, strict: false });
+  } catch (e) {
+    return escapeHtml(tex);
+  }
+}
+
+function richText(str) {
+  const s = str == null ? '' : String(str);
+  const parts = s.split('$');
+  if (parts.length % 2 === 0) return escapeHtml(s).replace(/\n/g, '<br>');
+  return parts
+    .map((part, i) => (i % 2 ? renderMath(part) : escapeHtml(part).replace(/\n/g, '<br>')))
+    .join('');
+}
+
+/* Theory markup: blocks separated by blank lines; "### Title" is a subheading,
+   "[table]" starts a table (rows by newline, cells by tab, <br> inside a cell). */
+function renderTheory(content) {
+  return (content || '')
+    .split(/\n\s*\n/)
+    .filter((block) => block.trim())
+    .map((block) => {
+      if (block.startsWith('[table]')) {
+        const rows = block.split('\n').slice(1).filter((r) => r.trim());
+        const body = rows.map((row) => `<tr>${row.split('\t').map((cell) =>
+          `<td>${cell.split('<br>').map(richText).join('<br>')}</td>`).join('')}</tr>`).join('');
+        return `<div class="theory-table-wrap"><table class="theory-table">${body}</table></div>`;
+      }
+      if (block.startsWith('### ')) return `<h4>${richText(block.slice(4))}</h4>`;
+      return `<p>${richText(block)}</p>`;
+    })
+    .join('');
+}
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Russian plural forms: 1 вопрос, 2 вопроса, 5 вопросов.
@@ -461,25 +500,22 @@ function renderParagraphs(paragraphs, topicId) {
     return;
   }
 
+  const total = paragraphs.length;
   paragraphs.forEach((material, i) => {
     const block = document.createElement('div');
     block.className = `card theory-block ${material.is_read ? 'read' : ''}`;
     block.style.setProperty('--i', i);
-    const paragraphs = (material.content || '')
-      .split(/\n\s*\n/)
-      .filter((p) => p.trim())
-      .map((p) => `<p>${escapeHtml(p)}</p>`)
-      .join('');
+    const contentHtml = renderTheory(material.content);
 
     block.innerHTML = `
       <div class="theory-block-header">
         <div>
-          <span class="theory-step">Параграф ${i + 1} из ${paragraphs.length}</span>
+          <span class="theory-step">Параграф ${i + 1} из ${total}</span>
           <h3>${escapeHtml(material.title)}</h3>
         </div>
         <span class="read-badge ${material.is_read ? 'read' : ''}">${material.is_read ? '✓ Прочитано' : 'Не прочитано'}</span>
       </div>
-      <div class="theory-content">${paragraphs || '<p class="muted">Материал пока пуст.</p>'}</div>
+      <div class="theory-content">${contentHtml || '<p class="muted">Материал пока пуст.</p>'}</div>
       <button type="button" class="btn mark-read-btn ${material.is_read ? 'done' : ''}" ${material.is_read ? 'disabled' : ''}>
         ${material.is_read ? '✓ Прочитано' : 'Отметить как прочитанное'}
       </button>
@@ -569,7 +605,7 @@ function renderQuestion() {
   document.getElementById('quiz-kicker').textContent = question.type === 'multiple'
     ? 'Выберите все верные варианты'
     : question.type === 'text' ? 'Введите ответ' : 'Выберите один вариант';
-  document.getElementById('quiz-question-prompt').textContent = question.prompt;
+  document.getElementById('quiz-question-prompt').innerHTML = richText(question.prompt);
   renderQuizSteps();
 
   const card = document.getElementById('quiz-card');
@@ -607,7 +643,7 @@ function renderQuestion() {
       btn.className = 'option-btn';
       btn.style.setProperty('--i', i);
       btn.dataset.value = opt;
-      btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + i)}</span><span>${escapeHtml(opt)}</span>`;
+      btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + i)}</span><span class="option-text">${richText(opt)}</span>`;
       btn.addEventListener('click', () => selectOption(opt, btn));
       optionsWrap.appendChild(btn);
     });
@@ -687,7 +723,7 @@ function showAnswerFeedback(result, question, answer) {
   feedback.className = `quiz-feedback ${result.is_correct ? 'correct' : 'incorrect'}`;
   feedback.innerHTML = `
     <span class="fb-ico">${result.is_correct ? '✓' : '✕'}</span>
-    <div><b>${result.is_correct ? 'Верно!' : 'Неверно'}</b>${escapeHtml(result.explanation || (result.is_correct ? 'Так держать.' : 'Загляните в теорию и попробуйте ещё раз в следующей практике.'))}</div>
+    <div><b>${result.is_correct ? 'Верно!' : 'Неверно'}</b>${richText(result.explanation || (result.is_correct ? 'Так держать.' : 'Загляните в теорию и попробуйте ещё раз в следующей практике.'))}</div>
   `;
 
   if (question.type !== 'text') {
@@ -985,7 +1021,7 @@ function renderMockQuestion() {
 
   document.getElementById('mock-kicker').textContent = `Вопрос ${index + 1} из ${questions.length} · ${
     q.type === 'multiple' ? 'несколько верных' : q.type === 'text' ? 'текстовый ответ' : 'один верный'}`;
-  document.getElementById('mock-prompt').textContent = q.prompt;
+  document.getElementById('mock-prompt').innerHTML = richText(q.prompt);
 
   const card = document.getElementById('mock-card');
   card.classList.remove('enter');
@@ -1012,7 +1048,7 @@ function renderMockQuestion() {
       btn.style.setProperty('--i', i);
       const selected = Array.isArray(current) ? current.includes(opt) : current === opt;
       if (selected) btn.classList.add('selected');
-      btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + i)}</span><span>${escapeHtml(opt)}</span>`;
+      btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + i)}</span><span class="option-text">${richText(opt)}</span>`;
       btn.addEventListener('click', () => {
         let next;
         if (q.type === 'multiple') {
@@ -1162,12 +1198,12 @@ function renderMockReview(review) {
         <span class="review-num">${i + 1}</span>
         <span class="review-status">${q.is_correct ? '✓ верно' : q.user_answer === null ? '— без ответа' : '✕ неверно'}</span>
       </div>
-      <p class="review-prompt">${escapeHtml(q.prompt)}</p>
+      <p class="review-prompt">${richText(q.prompt)}</p>
       <div class="review-answers">
-        <div><span class="muted">Ваш ответ:</span> <b class="${q.is_correct ? 'good' : 'bad'}">${escapeHtml(formatAnswer(q.user_answer))}</b></div>
-        ${q.is_correct ? '' : `<div><span class="muted">Правильный:</span> <b class="good">${escapeHtml(formatAnswer(q.correct_answer))}</b></div>`}
+        <div><span class="muted">Ваш ответ:</span> <b class="${q.is_correct ? 'good' : 'bad'}">${richText(formatAnswer(q.user_answer))}</b></div>
+        ${q.is_correct ? '' : `<div><span class="muted">Правильный:</span> <b class="good">${richText(formatAnswer(q.correct_answer))}</b></div>`}
       </div>
-      ${q.explanation ? `<p class="review-explanation">${escapeHtml(q.explanation)}</p>` : ''}
+      ${q.explanation ? `<p class="review-explanation">${richText(q.explanation)}</p>` : ''}
     </div>`).join('');
 }
 

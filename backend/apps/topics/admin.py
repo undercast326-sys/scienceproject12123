@@ -3,7 +3,7 @@ from django.contrib import admin
 from apps.questions.forms import AnswerKeyForm
 from apps.questions.models import Question
 
-from .models import Subject, Topic, Paragraph, ParagraphProgress
+from .models import ContentImport, Subject, Topic, Paragraph, ParagraphProgress
 
 
 @admin.register(Subject)
@@ -48,3 +48,9 @@ class ParagraphAdmin(admin.ModelAdmin):
 class ParagraphProgressAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'paragraph', 'read_at')
     list_select_related = ('user', 'paragraph')
+
+
+@admin.register(ContentImport)
+class ContentImportAdmin(admin.ModelAdmin):
+    list_display = ('source', 'sha256', 'imported_at')
+    readonly_fields = ('source', 'sha256', 'imported_at')

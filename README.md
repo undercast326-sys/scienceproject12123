@@ -13,6 +13,25 @@ Everything is managed at `<backend-url>/admin/`:
 - Task/question fields: `type` = `single` / `multiple` / `text`. Type `options` as plain text, **one option per line** (leave empty for `text`). Type `correct_answer` as the exact text of the right option; for `multiple`, one correct option per line; for `text`, the expected answer (case-insensitive). Saving fails if the answer doesn't match the options. `explanation` is shown after answering.
 - XP: 10 per question answered correctly **for the first time** (practice and mock tests alike). Replaying already-solved questions updates stats but gives no XP.
 
+## Maths content from Word files
+
+The Математика subject is generated from the chapter `.doc` files (Word 97–2003, formulas in Equation Editor 3.0). The `.doc` files are not committed: they stay local, and `*.doc` is in `.gitignore`. Their content is committed instead, in `backend/content/math.json`.
+
+- **One file = one topic.** Each `NN.NN` subsection becomes a theory paragraph, and all of the file's A–E tests become the topic's tasks.
+- **Formulas** are converted to LaTeX (`$...$`) and drawn on the site with KaTeX. Word tables become `[table]` blocks (rows on lines, cells split by tabs), and `### ` lines are subheadings.
+- **Skipped tasks.** A task is left out if it uses a picture, if a formula can't be read, or if its options are identical after conversion. About 6% are skipped; the script prints the counts by reason.
+
+To rebuild after editing or adding `.doc` files:
+
+```bash
+python3 -m venv /tmp/docenv && /tmp/docenv/bin/pip install -r tools/doc_import/requirements.txt
+/tmp/docenv/bin/python -I tools/doc_import/build_math.py . backend/content/math.json
+```
+
+Topic names live in `TOPICS` in `tools/doc_import/build_math.py`.
+
+**Importing.** On every deploy, `python manage.py import_content content/math.json` runs at start. It does nothing if the file is unchanged since the last import. When the file changes, it **replaces all Математика topics**: tasks, paragraphs and students' progress on them. Edits made to those topics in the admin are lost too, so for lasting changes edit the `.doc` files (or the JSON) instead. Other subjects are not touched. Use `--force` to reimport an unchanged file.
+
 ## Deploy (Render)
 
 1. Push this folder to a new GitHub repo (see commands below).
