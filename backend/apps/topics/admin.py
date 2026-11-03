@@ -1,40 +1,50 @@
 from django.contrib import admin
 
-from .models import Subject, Grade, Topic, TheoryMaterial, TheoryProgress
+from apps.questions.forms import AnswerKeyForm
+from apps.questions.models import Question
+
+from .models import Subject, Topic, Paragraph, ParagraphProgress
 
 
 @admin.register(Subject)
 class SubjectAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'icon')
+    list_display = ('id', 'name', 'icon', 'order')
+    list_editable = ('order',)
     search_fields = ('name',)
 
 
-@admin.register(Grade)
-class GradeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'number', 'label')
-    ordering = ('number',)
-
-
-class TheoryMaterialInline(admin.TabularInline):
-    model = TheoryMaterial
+class ParagraphInline(admin.StackedInline):
+    model = Paragraph
     extra = 0
+    fields = ('order', 'title', 'content')
+
+
+class QuestionInline(admin.StackedInline):
+    model = Question
+    form = AnswerKeyForm
+    extra = 0
+    fields = ('order', 'type', 'prompt', 'options', 'correct_answer', 'explanation')
 
 
 @admin.register(Topic)
 class TopicAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'subject', 'grade', 'difficulty', 'order')
-    list_filter = ('subject', 'grade', 'difficulty')
+    list_display = ('id', 'name', 'subject', 'difficulty', 'order')
+    list_select_related = ('subject',)
+    list_filter = ('subject', 'difficulty')
+    list_editable = ('order',)
     search_fields = ('name',)
-    inlines = [TheoryMaterialInline]
+    inlines = [ParagraphInline, QuestionInline]
 
 
-@admin.register(TheoryMaterial)
-class TheoryMaterialAdmin(admin.ModelAdmin):
+@admin.register(Paragraph)
+class ParagraphAdmin(admin.ModelAdmin):
     list_display = ('id', 'title', 'topic', 'order')
-    list_filter = ('topic__subject', 'topic__grade')
+    list_select_related = ('topic', 'topic__subject')
+    list_filter = ('topic__subject',)
     search_fields = ('title',)
 
 
-@admin.register(TheoryProgress)
-class TheoryProgressAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'theory', 'read_at')
+@admin.register(ParagraphProgress)
+class ParagraphProgressAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'paragraph', 'read_at')
+    list_select_related = ('user', 'paragraph')

@@ -17,4 +17,5 @@ urlpatterns = [
     path('api/', include('apps.topics.urls')),
     path('api/questions/', include('apps.questions.urls')),
     path('api/quizzes/', include('apps.quizzes.urls')),
+    path('api/', include('apps.mocktests.urls')),
 ]

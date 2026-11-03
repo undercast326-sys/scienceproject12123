@@ -3,18 +3,21 @@ from pathlib import Path
 from datetime import timedelta
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / '.env')
 
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY',
-    'django-insecure-jr*nu$^pnthhzb-$m^6)5axpm2bref%zzeh5tamvma_f+4l87#',
-)
-
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if not DEBUG:
+        # Never fall back to a key that is public in the repo on a real deploy.
+        raise ImproperlyConfigured('SECRET_KEY must be set when DEBUG is off.')
+    SECRET_KEY = 'django-insecure-local-dev-only'
 
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()]
 
@@ -39,6 +42,7 @@ INSTALLED_APPS = [
     'apps.topics',
     'apps.questions',
     'apps.quizzes',
+    'apps.mocktests',
 ]
 
 MIDDLEWARE = [
@@ -77,7 +81,7 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
     DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600),
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600, conn_health_checks=True),
     }
 else:
     DATABASES = {
@@ -97,6 +101,15 @@ else:
     }
 
 
+# Argon2 first: verifying a login takes ~50ms vs. ~1s+ for Django's default
+# 1M-iteration PBKDF2 on a small shared CPU. Existing PBKDF2 hashes still verify
+# and are re-hashed with Argon2 on the user's next successful login.
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+]
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -113,7 +126,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru'
 
 TIME_ZONE = 'UTC'
 
@@ -142,6 +155,15 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        # Anonymous traffic is only login/register: keep brute force in check.
+        'anon': '30/min',
+        'user': '600/min',
+    },
 }
 
 SIMPLE_JWT = {

@@ -11,7 +11,14 @@ class QuizSession(models.Model):
     started_at = models.DateTimeField(auto_now_add=True)
     finished_at = models.DateTimeField(null=True, blank=True)
     score = models.IntegerField(default=0)
+    xp_earned = models.IntegerField(default=0)
     questions = models.ManyToManyField(Question, related_name='quiz_sessions', blank=True)
+
+    class Meta:
+        indexes = [
+            # best_score per topic: filter(user, topic, finished_at not null)
+            models.Index(fields=['user', 'topic', 'finished_at']),
+        ]
 
     def __str__(self):
         return f'Session {self.id} ({self.user.username} / {self.topic.name})'

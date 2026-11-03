@@ -55,7 +55,7 @@ async function apiRequest(path, { method = 'GET', body, auth = true, retry = tru
       return apiRequest(path, { method, body, auth, retry: false });
     }
     TokenStore.clear();
-    throw new ApiError('Session expired, please log in again.', 401);
+    throw new ApiError('Сессия истекла, войдите снова.', 401);
   }
 
   let data = null;
@@ -69,7 +69,7 @@ async function apiRequest(path, { method = 'GET', body, auth = true, retry = tru
   }
 
   if (!res.ok) {
-    const message = data && (data.detail || firstErrorMessage(data)) || `Request failed (${res.status})`;
+    const message = data && (data.detail || firstErrorMessage(data)) || `Ошибка запроса (${res.status})`;
     throw new ApiError(message, res.status, data);
   }
 
@@ -81,10 +81,14 @@ async function apiList(path, options) {
   return Array.isArray(data) ? data : data.results;
 }
 
+const FIELD_LABELS = { username: 'Логин', email: 'Email', password: 'Пароль' };
+
 function firstErrorMessage(data) {
   for (const key of Object.keys(data)) {
     const value = data[key];
-    if (Array.isArray(value) && value.length) return `${key}: ${value[0]}`;
+    if (Array.isArray(value) && value.length) {
+      return key === 'non_field_errors' ? value[0] : `${FIELD_LABELS[key] || key}: ${value[0]}`;
+    }
     if (typeof value === 'string') return value;
   }
   return null;
@@ -99,6 +103,17 @@ class ApiError extends Error {
 }
 
 const Api = {
+  // Used by the splash screen: resolves false on any network/server error so the
+  // caller can retry while a cold backend boots.
+  async health() {
+    try {
+      const res = await fetch(`${BASE_URL}/health/`, { cache: 'no-store' });
+      return res.ok;
+    } catch (e) {
+      return false;
+    }
+  },
+
   register(username, email, password) {
     return apiRequest('/auth/register/', { method: 'POST', body: { username, email, password }, auth: false });
   },
@@ -117,20 +132,17 @@ const Api = {
   getSubjects() {
     return apiList('/subjects/');
   },
-  getGrades(subjectId) {
-    return apiList(`/grades/?subject=${subjectId}`);
-  },
-  getTopics(subjectId, gradeId) {
-    return apiList(`/topics/?subject=${subjectId}&grade=${gradeId}`);
+  getTopics(subjectId) {
+    return apiList(`/topics/?subject=${subjectId}`);
   },
   getAllTopics() {
     return apiList('/topics/');
   },
-  getTheory(topicId) {
-    return apiRequest(`/topics/${topicId}/theory/`);
+  getParagraphs(topicId) {
+    return apiRequest(`/topics/${topicId}/paragraphs/`);
   },
-  markTheoryRead(topicId, theoryId) {
-    return apiRequest(`/topics/${topicId}/theory/${theoryId}/read/`, { method: 'POST' });
+  markParagraphRead(topicId, paragraphId) {
+    return apiRequest(`/topics/${topicId}/paragraphs/${paragraphId}/read/`, { method: 'POST' });
   },
   getTopicProgress(topicId) {
     return apiRequest(`/topics/${topicId}/progress/`);
@@ -150,5 +162,27 @@ const Api = {
   },
   getProgress() {
     return apiRequest('/progress/me/');
+  },
+
+  getMockTests(subjectId) {
+    return apiList(subjectId ? `/mock-tests/?subject=${subjectId}` : '/mock-tests/');
+  },
+  startMockTest(testId) {
+    return apiRequest(`/mock-tests/${testId}/start/`, { method: 'POST' });
+  },
+  answerMock(attemptId, questionId, answer) {
+    return apiRequest(`/mock-attempts/${attemptId}/answer/`, {
+      method: 'POST',
+      body: { question_id: questionId, answer },
+    });
+  },
+  finishMock(attemptId) {
+    return apiRequest(`/mock-attempts/${attemptId}/finish/`, { method: 'POST' });
+  },
+  getMockReview(attemptId) {
+    return apiRequest(`/mock-attempts/${attemptId}/review/`);
+  },
+  getMyMockAttempts() {
+    return apiRequest('/mock-attempts/mine/');
   },
 };

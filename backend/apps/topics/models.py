@@ -6,28 +6,13 @@ class Subject(models.Model):
     name = models.CharField(max_length=100, unique=True)
     icon = models.CharField(max_length=20, blank=True, default='')
     description = models.TextField(blank=True, default='')
+    order = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['order', 'name']
 
     def __str__(self):
         return self.name
-
-
-class Grade(models.Model):
-    number = models.PositiveSmallIntegerField(unique=True)
-    label = models.CharField(max_length=50, blank=True, default='')
-
-    class Meta:
-        ordering = ['number']
-
-    def save(self, *args, **kwargs):
-        if not self.label:
-            self.label = f'{self.number} класс'
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.label
 
 
 class Topic(models.Model):
@@ -38,24 +23,24 @@ class Topic(models.Model):
     ]
 
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name='topics')
-    grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='topics')
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, default='')
     difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='easy')
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ['grade__number', 'order', 'id']
+        ordering = ['order', 'id']
         indexes = [
-            models.Index(fields=['subject', 'grade', 'order']),
+            models.Index(fields=['subject', 'order']),
         ]
 
     def __str__(self):
-        return f'{self.name} ({self.subject.name}, {self.grade.label})'
+        return f'{self.name} ({self.subject.name})'
 
 
-class TheoryMaterial(models.Model):
-    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='theory_materials')
+class Paragraph(models.Model):
+    """One theory section (§) inside a topic. Tasks live on the topic and cover all of them."""
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name='paragraphs')
     title = models.CharField(max_length=200)
     content = models.TextField(blank=True, default='')
     order = models.PositiveIntegerField(default=0)
@@ -71,13 +56,13 @@ class TheoryMaterial(models.Model):
         return self.title
 
 
-class TheoryProgress(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='theory_progress')
-    theory = models.ForeignKey(TheoryMaterial, on_delete=models.CASCADE, related_name='progress')
+class ParagraphProgress(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='paragraph_progress')
+    paragraph = models.ForeignKey(Paragraph, on_delete=models.CASCADE, related_name='progress')
     read_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'theory')
+        unique_together = ('user', 'paragraph')
 
     def __str__(self):
-        return f'{self.user.username} read {self.theory_id}'
+        return f'{self.user.username} read {self.paragraph_id}'

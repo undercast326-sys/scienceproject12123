@@ -3,91 +3,187 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Science Quiz</title>
+<meta name="theme-color" content="#0b0d14">
+<title>CookUNT — готовим к ЕНТ</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23ff7a45'/%3E%3Cpath d='M18 30h28v12a10 10 0 0 1-10 10H28a10 10 0 0 1-10-10z' fill='%23fff'/%3E%3Crect x='14' y='25' width='36' height='4' rx='2' fill='%23fff'/%3E%3Crect x='7' y='32' width='8' height='4' rx='2' fill='%23fff'/%3E%3Crect x='49' y='32' width='8' height='4' rx='2' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
+<!-- Reusable logo mark -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="logo-pot" viewBox="0 0 64 64">
+      <path class="steam s1" d="M22 22c-3-4 3-7 0-11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <path class="steam s2" d="M32 20c-3-4 3-7 0-11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <path class="steam s3" d="M42 22c-3-4 3-7 0-11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <rect x="14" y="27" width="36" height="4" rx="2" fill="currentColor"/>
+      <path d="M18 32h28v12a10 10 0 0 1-10 10H28a10 10 0 0 1-10-10z" fill="currentColor"/>
+      <rect x="7" y="34" width="8" height="4" rx="2" fill="currentColor"/>
+      <rect x="49" y="34" width="8" height="4" rx="2" fill="currentColor"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- Ambient background -->
+<div class="ambient" aria-hidden="true">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+
+<!-- Splash / loading screen -->
+<div id="splash" class="splash" role="status" aria-live="polite">
+  <div class="splash-inner">
+    <div class="splash-mark">
+      <svg class="logo-svg" aria-hidden="true"><use href="#logo-pot"/></svg>
+    </div>
+    <div class="splash-word" aria-label="CookUNT">
+      <span>C</span><span>o</span><span>o</span><span>k</span><span class="accent">U</span><span class="accent">N</span><span class="accent">T</span>
+    </div>
+    <p class="splash-tag">Готовим к ЕНТ по рецепту</p>
+    <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+    <p class="splash-status" id="splash-status">Разогреваем кухню…</p>
+  </div>
+</div>
+
 <header class="topbar" id="topbar" hidden>
-  <div class="brand">🔬 Science Quiz</div>
-  <nav>
-    <button class="nav-link" data-nav="subjects">Предметы</button>
-    <button class="nav-link" data-nav="progress">Прогресс</button>
-    <button class="nav-link" id="logout-btn">Выйти</button>
-  </nav>
+  <div class="topbar-inner">
+    <button class="brand" data-nav="subjects" type="button" aria-label="CookUNT — на главную">
+      <span class="brand-mark"><svg class="logo-svg" aria-hidden="true"><use href="#logo-pot"/></svg></span>
+      <span class="brand-word">Cook<span class="accent">UNT</span></span>
+    </button>
+    <nav class="topnav">
+      <button class="nav-link" data-nav="subjects" type="button">Предметы</button>
+      <button class="nav-link" data-nav="mocks" type="button">Пробные тесты</button>
+      <button class="nav-link" data-nav="progress" type="button">Прогресс</button>
+      <button class="user-chip" data-nav="progress" type="button" id="user-chip" hidden>
+        <span class="user-chip-avatar" id="user-chip-avatar">?</span>
+        <span class="user-chip-text">
+          <span class="user-chip-name" id="user-chip-name"></span>
+          <span class="user-chip-meta" id="user-chip-meta"></span>
+        </span>
+      </button>
+      <button class="nav-link ghost" id="logout-btn" type="button" title="Выйти">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Выйти</span>
+      </button>
+    </nav>
+  </div>
 </header>
 
 <main id="app">
 
   <!-- AUTH SCREEN -->
   <section id="screen-auth" class="screen">
-    <div class="card auth-card">
-      <h1>🔬 Science Quiz</h1>
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="login">Log in</button>
-        <button class="tab-btn" data-tab="register">Register</button>
+    <div class="auth-layout">
+      <div class="auth-hero">
+        <div class="auth-hero-brand">
+          <span class="brand-mark large"><svg class="logo-svg" aria-hidden="true"><use href="#logo-pot"/></svg></span>
+          <span class="brand-word large">Cook<span class="accent">UNT</span></span>
+        </div>
+        <h1 class="auth-hero-title">Готовим к ЕНТ<br>по проверенному рецепту</h1>
+        <p class="auth-hero-sub">Теория небольшими порциями, практика с мгновенной проверкой и прогресс, который видно.</p>
+        <ul class="auth-features">
+          <li><span class="feature-ico">📖</span><span><b>Теория по шагам</b><br>Короткие материалы по каждой теме школьной программы</span></li>
+          <li><span class="feature-ico">✏️</span><span><b>Практика с разбором</b><br>Объяснение к каждому ответу — сразу, а не в конце</span></li>
+          <li><span class="feature-ico">🔥</span><span><b>Опыт и уровни</b><br>Каждый верный ответ приближает к следующему уровню</span></li>
+        </ul>
       </div>
 
-      <form id="login-form" class="tab-panel active">
-        <label>Username
-          <input type="text" id="login-username" required autocomplete="username">
-        </label>
-        <label>Password
-          <input type="password" id="login-password" required autocomplete="current-password">
-        </label>
-        <button type="submit" class="btn primary">Log in</button>
-        <p class="form-error" id="login-error"></p>
-      </form>
+      <div class="card auth-card">
+        <div class="tabs" role="tablist">
+          <button class="tab-btn active" data-tab="login" role="tab" type="button">Вход</button>
+          <button class="tab-btn" data-tab="register" role="tab" type="button">Регистрация</button>
+          <span class="tab-indicator" aria-hidden="true"></span>
+        </div>
 
-      <form id="register-form" class="tab-panel">
-        <label>Username
-          <input type="text" id="register-username" required autocomplete="username">
-        </label>
-        <label>Email (optional)
-          <input type="email" id="register-email" autocomplete="email">
-        </label>
-        <label>Password
-          <input type="password" id="register-password" required minlength="6" autocomplete="new-password">
-        </label>
-        <button type="submit" class="btn primary">Create account</button>
-        <p class="form-error" id="register-error"></p>
-      </form>
+        <form id="login-form" class="tab-panel active" novalidate>
+          <h2 class="auth-form-title">С возвращением 👋</h2>
+          <label>Имя пользователя
+            <input type="text" id="login-username" required autocomplete="username" placeholder="ваш логин">
+          </label>
+          <label>Пароль
+            <input type="password" id="login-password" required autocomplete="current-password" placeholder="••••••••">
+          </label>
+          <button type="submit" class="btn primary full">Войти</button>
+          <p class="form-error" id="login-error" role="alert"></p>
+        </form>
+
+        <form id="register-form" class="tab-panel" novalidate>
+          <h2 class="auth-form-title">Создать аккаунт</h2>
+          <label>Имя пользователя
+            <input type="text" id="register-username" required autocomplete="username" placeholder="придумайте логин">
+          </label>
+          <label>Email <span class="muted">(необязательно)</span>
+            <input type="email" id="register-email" autocomplete="email" placeholder="you@example.com">
+          </label>
+          <label>Пароль
+            <input type="password" id="register-password" required minlength="8" autocomplete="new-password" placeholder="минимум 8 символов">
+          </label>
+          <button type="submit" class="btn primary full">Начать готовить</button>
+          <p class="form-error" id="register-error" role="alert"></p>
+        </form>
+      </div>
     </div>
   </section>
 
   <!-- SUBJECTS SCREEN -->
   <section id="screen-subjects" class="screen">
-    <h1>Выберите предмет</h1>
-    <div id="subjects-grid" class="choice-grid"></div>
+    <div class="page-head">
+      <p class="eyebrow">Меню</p>
+      <h1>Выберите предмет</h1>
+      <p class="lead">С чего начнём сегодня?</p>
+    </div>
+    <div id="subjects-grid" class="choice-grid subjects-grid"></div>
   </section>
 
-  <!-- GRADES SCREEN -->
-  <section id="screen-grades" class="screen">
-    <div class="breadcrumb" id="grades-breadcrumb"></div>
-    <h1>Выберите класс</h1>
-    <div id="grades-grid" class="choice-grid"></div>
-  </section>
+  <!-- SUBJECT SCREEN: topics + mock tests -->
+  <section id="screen-subject" class="screen">
+    <div class="breadcrumb" id="subject-breadcrumb"></div>
+    <div class="page-head">
+      <p class="eyebrow">Предмет</p>
+      <h1 id="subject-title"></h1>
+      <p class="lead" id="subject-desc"></p>
+    </div>
 
-  <!-- CHAPTERS SCREEN -->
-  <section id="screen-chapters" class="screen">
-    <div class="breadcrumb" id="chapters-breadcrumb"></div>
-    <h1>Темы</h1>
-    <div id="chapters-grid" class="choice-grid"></div>
+    <h2 class="section-heading first"><span class="section-ico">📚</span>Темы</h2>
+    <div id="topics-grid" class="choice-grid"></div>
+
+    <h2 class="section-heading"><span class="section-ico">⏱️</span>Пробные тесты</h2>
+    <div id="subject-mocks" class="mock-list"></div>
   </section>
 
   <!-- CHAPTER DETAIL SCREEN (theory -> practice) -->
   <section id="screen-detail" class="screen">
     <div class="breadcrumb" id="detail-breadcrumb"></div>
-    <h1 id="detail-topic-name"></h1>
-    <p class="topic-desc" id="detail-topic-desc"></p>
+    <div class="page-head">
+      <p class="eyebrow" id="detail-eyebrow"></p>
+      <h1 id="detail-topic-name"></h1>
+      <p class="lead" id="detail-topic-desc"></p>
+    </div>
 
-    <h2 class="section-heading">📖 Теория</h2>
-    <div id="theory-list" class="theory-list"></div>
+    <div class="detail-layout">
+      <div class="detail-main">
+        <h2 class="section-heading"><span class="section-ico">📖</span>Теория</h2>
+        <div id="paragraph-list" class="theory-list"></div>
+      </div>
 
-    <div class="card practice-card">
-      <h2 class="section-heading no-margin">✏️ Практика</h2>
-      <p id="practice-summary" class="practice-summary"></p>
-      <button id="start-practice-btn" class="btn primary">Начать практику</button>
+      <aside class="detail-side">
+        <div class="card practice-card">
+          <div class="practice-glow" aria-hidden="true"></div>
+          <h2 class="section-heading no-margin"><span class="section-ico">✏️</span>Задания</h2>
+          <p id="practice-summary" class="practice-summary"></p>
+          <div id="practice-stats" class="practice-stats"></div>
+          <button id="start-practice-btn" class="btn primary full">
+            Решать задания
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </aside>
     </div>
   </section>
 
@@ -95,25 +191,26 @@
   <section id="screen-quiz" class="screen">
     <div class="breadcrumb" id="quiz-breadcrumb"></div>
     <div class="quiz-header">
-      <h1 id="quiz-topic-name"></h1>
-      <div class="quiz-progress-bar">
-        <div id="quiz-progress-fill" class="quiz-progress-fill"></div>
+      <div class="quiz-header-row">
+        <h1 id="quiz-topic-name" class="quiz-title"></h1>
+        <p id="quiz-progress-text" class="quiz-progress-text"></p>
       </div>
-      <p id="quiz-progress-text"></p>
+      <div class="quiz-steps" id="quiz-steps"></div>
     </div>
 
-    <div class="card quiz-card">
+    <div class="card quiz-card" id="quiz-card">
+      <p class="quiz-kicker" id="quiz-kicker"></p>
       <p id="quiz-question-prompt" class="question-prompt"></p>
       <div id="quiz-options" class="quiz-options"></div>
       <div id="quiz-text-input-wrap" class="quiz-text-input-wrap" hidden>
-        <input type="text" id="quiz-text-input" placeholder="Введите ответ...">
+        <input type="text" id="quiz-text-input" placeholder="Введите ответ…" autocomplete="off">
       </div>
 
       <div id="quiz-feedback" class="quiz-feedback" hidden></div>
 
       <div class="quiz-actions">
-        <button id="quiz-submit-btn" class="btn primary">Ответить</button>
-        <button id="quiz-next-btn" class="btn primary" hidden>Далее</button>
+        <button id="quiz-submit-btn" class="btn primary" type="button">Ответить</button>
+        <button id="quiz-next-btn" class="btn primary" type="button" hidden>Далее</button>
       </div>
     </div>
   </section>
@@ -121,26 +218,144 @@
   <!-- RESULT SCREEN -->
   <section id="screen-result" class="screen">
     <div class="card result-card">
-      <h1>Практика завершена!</h1>
-      <p class="result-score" id="result-score"></p>
+      <div class="result-ring-wrap">
+        <svg class="result-ring" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring-track" cx="60" cy="60" r="52"/>
+          <circle class="ring-fill" id="result-ring-fill" cx="60" cy="60" r="52"/>
+        </svg>
+        <div class="result-ring-center">
+          <span class="result-score" id="result-score">0</span>
+          <span class="result-total" id="result-total"></span>
+        </div>
+      </div>
+      <h1 class="result-title" id="result-title">Готово!</h1>
+      <p class="result-sub" id="result-sub"></p>
       <div class="result-stats" id="result-stats"></div>
-      <div class="quiz-actions">
-        <button class="btn primary" data-nav="chapters">К темам</button>
-        <button class="btn" data-nav="progress">Мой прогресс</button>
+      <div class="quiz-actions center">
+        <button class="btn primary" data-nav="detail" type="button">Ещё раз</button>
+        <button class="btn" data-nav="chapters" type="button">К темам</button>
+        <button class="btn ghost" data-nav="progress" type="button">Мой прогресс</button>
       </div>
     </div>
   </section>
 
+  <!-- MOCK TESTS: all subjects -->
+  <section id="screen-mocks" class="screen">
+    <div class="page-head">
+      <p class="eyebrow">Экзамен</p>
+      <h1>Пробные тесты</h1>
+      <p class="lead">Формат настоящего ЕНТ: таймер, без подсказок, разбор в конце.</p>
+    </div>
+    <div id="mocks-list" class="mock-groups"></div>
+  </section>
+
+  <!-- MOCK TEST: intro -->
+  <section id="screen-mock-intro" class="screen">
+    <div class="breadcrumb" id="mock-intro-breadcrumb"></div>
+    <div class="card mock-intro-card">
+      <div class="practice-glow" aria-hidden="true"></div>
+      <p class="eyebrow" id="mock-intro-subject"></p>
+      <h1 id="mock-intro-title"></h1>
+      <p class="lead" id="mock-intro-desc"></p>
+      <div class="mock-intro-facts" id="mock-intro-facts"></div>
+      <ul class="mock-rules">
+        <li>Таймер запускается сразу после старта и не останавливается.</li>
+        <li>Правильность ответов не показывается до завершения теста.</li>
+        <li>Между вопросами можно переключаться и менять ответы.</li>
+        <li>Когда время выйдет, тест завершится автоматически.</li>
+      </ul>
+      <div class="quiz-actions">
+        <button id="mock-start-btn" class="btn primary" type="button">Начать тест</button>
+        <button class="btn ghost" data-nav="mocks" type="button">Назад</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOCK TEST: taking -->
+  <section id="screen-mock-test" class="screen">
+    <div class="mock-topbar">
+      <div>
+        <p class="eyebrow" id="mock-test-subject"></p>
+        <h1 class="quiz-title" id="mock-test-title"></h1>
+      </div>
+      <div class="mock-timer" id="mock-timer" aria-live="polite">
+        <span class="mock-timer-label">Осталось</span>
+        <span class="mock-timer-value" id="mock-timer-value">--:--</span>
+      </div>
+    </div>
+
+    <div class="mock-layout">
+      <div class="card quiz-card" id="mock-card">
+        <p class="quiz-kicker" id="mock-kicker"></p>
+        <p class="question-prompt" id="mock-prompt"></p>
+        <div id="mock-options" class="quiz-options"></div>
+        <div id="mock-text-wrap" class="quiz-text-input-wrap" hidden>
+          <input type="text" id="mock-text-input" placeholder="Введите ответ…" autocomplete="off">
+        </div>
+        <div class="quiz-actions between">
+          <button id="mock-prev-btn" class="btn" type="button">← Назад</button>
+          <span class="mock-save-state" id="mock-save-state"></span>
+          <button id="mock-next-btn" class="btn primary" type="button">Далее →</button>
+        </div>
+      </div>
+
+      <aside class="mock-side">
+        <div class="card mock-nav-card">
+          <div class="mock-nav-head">
+            <span>Вопросы</span>
+            <span class="muted" id="mock-answered-count"></span>
+          </div>
+          <div class="mock-nav-grid" id="mock-nav-grid"></div>
+          <button id="mock-finish-btn" class="btn primary full" type="button">Завершить тест</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- MOCK TEST: result + review -->
+  <section id="screen-mock-result" class="screen">
+    <div class="card result-card">
+      <div class="result-ring-wrap">
+        <svg class="result-ring" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring-track" cx="60" cy="60" r="52"/>
+          <circle class="ring-fill" id="mock-ring-fill" cx="60" cy="60" r="52"/>
+        </svg>
+        <div class="result-ring-center">
+          <span class="result-score" id="mock-result-score">0</span>
+          <span class="result-total" id="mock-result-total"></span>
+        </div>
+      </div>
+      <h1 class="result-title" id="mock-result-title">Тест завершён</h1>
+      <p class="result-sub" id="mock-result-sub"></p>
+      <div class="result-stats" id="mock-result-stats"></div>
+      <div class="quiz-actions center">
+        <button class="btn primary" id="mock-review-toggle" type="button">Разбор ответов</button>
+        <button class="btn" data-nav="mocks" type="button">К тестам</button>
+        <button class="btn ghost" data-nav="progress" type="button">Мой прогресс</button>
+      </div>
+    </div>
+
+    <div id="mock-review" class="mock-review" hidden></div>
+  </section>
+
   <!-- PROGRESS SCREEN -->
   <section id="screen-progress" class="screen">
-    <h1>Мой прогресс</h1>
-    <div class="card progress-card" id="progress-card"></div>
+    <div class="page-head">
+      <p class="eyebrow">Кухня</p>
+      <h1>Мой прогресс</h1>
+    </div>
+    <div class="progress-hero card" id="progress-card"></div>
 
-    <h2 class="section-heading">Прогресс по темам</h2>
+    <h2 class="section-heading"><span class="section-ico">⏱️</span>Пробные тесты</h2>
+    <div id="progress-mocks" class="progress-breakdown"></div>
+
+    <h2 class="section-heading"><span class="section-ico">📊</span>По темам</h2>
     <div id="progress-breakdown" class="progress-breakdown"></div>
   </section>
 
 </main>
+
+<div id="toast-root" class="toast-root" aria-live="polite"></div>
 
 <script src="js/config.js"></script>
 <script src="js/api.js"></script>

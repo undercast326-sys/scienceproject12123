@@ -1,6 +1,17 @@
-# Science Quiz
+# CookUNT
 
-Django REST API + vanilla JS quiz app, organized by subject (Математика / Математическая грамотность) and grade, with theory-then-practice chapters and progress tracking.
+CookUNT — Django REST API + vanilla JS app for ЕНТ (UNT) prep.
+
+Content structure: **Subject → Topic → Paragraphs (theory) + Tasks**, plus authored, timed **Mock tests** per subject. Users read paragraphs, practise tasks with instant feedback, sit mock tests in exam conditions (countdown, no hints, review at the end), and earn XP/levels.
+
+## Adding content (admin)
+
+Everything is managed at `<backend-url>/admin/`:
+
+- **Subjects** → **Topics** (each topic page has inline editors for its Paragraphs and Tasks).
+- **Mock tests** → one per exam variant; set `Subject`, `Duration minutes`, and add its Questions inline. Untick `Is published` to hide a draft.
+- Task/question fields: `type` = `single` / `multiple` / `text`. Type `options` as plain text, **one option per line** (leave empty for `text`). Type `correct_answer` as the exact text of the right option; for `multiple`, one correct option per line; for `text`, the expected answer (case-insensitive). Saving fails if the answer doesn't match the options. `explanation` is shown after answering.
+- XP: 10 per question answered correctly **for the first time** (practice and mock tests alike). Replaying already-solved questions updates stats but gives no XP.
 
 ## Deploy (Render)
 
@@ -14,7 +25,7 @@ Django REST API + vanilla JS quiz app, organized by subject (Математик�
 
 **Two things to know:**
 - Render's free Postgres plan **expires 30 days after creation** (then a 14-day grace period before deletion). Upgrade the database to a paid plan before then if you want to keep the data.
-- The seeded content is placeholder/test data only (`Тестовая тема` in a couple of grades). Add real content through `/admin/`, or write your own version of `backend/apps/topics/management/commands/seed_test_data.py` and run it from the Render Shell tab (`python manage.py seed_test_data`) — note it wipes and reseeds the curriculum tables, so don't run it once real content exists.
+- The seeded content is placeholder/test data only (`Тестовая тема 1/2` per subject and one `Пробный вариант`). Add real content through `/admin/`, or write your own version of `backend/apps/topics/management/commands/seed_test_data.py` and run it from the Render Shell tab (`python manage.py seed_test_data`) — note it wipes and reseeds the curriculum tables, so don't run it once real content exists.
 
 ### Push to GitHub
 
