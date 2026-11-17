@@ -1,4 +1,5 @@
 import json
+import re
 import tempfile
 from pathlib import Path
 
@@ -7,11 +8,14 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
 
+from apps.mocktests.models import MockQuestion, MockTest
 from apps.questions.models import Question
 from apps.topics.management.commands.import_content import validate
 from apps.topics.models import ContentImport, Paragraph, Subject, Topic
 
-MATH_JSON = Path(settings.BASE_DIR) / 'content' / 'math.json'
+CONTENT = Path(settings.BASE_DIR) / 'content'
+MATH_JSON = CONTENT / 'math.json'
+FRONTEND = Path(settings.BASE_DIR).parent / 'frontend'
 
 
 def sample(**overrides):
@@ -72,6 +76,68 @@ class ImportContentTests(TestCase):
             call_command('import_content', self.write(bad), stdout=open('/dev/null', 'w'))
         self.assertEqual(Topic.objects.count(), 0)
         self.assertFalse(ContentImport.objects.exists())
+
+
+def mock_sample():
+    return {
+        'subject': {'name': 'Математика'},
+        'mock_tests': [{
+            'title': 'Вариант 1', 'duration_minutes': 80,
+            'questions': [
+                {'type': 'single', 'prompt': 'Вычислить: $2+2$', 'options': ['3', '4'], 'correct_answer': '4'},
+                {'type': 'multiple', 'prompt': 'Корни $x^2=4$', 'options': ['2', '-2', '0'], 'correct_answer': ['2', '-2']},
+            ],
+        }],
+    }
+
+
+class ImportMockTestsTests(ImportContentTests.__bases__[0]):
+    write = ImportContentTests.write
+
+    def test_mock_tests_replace_only_mock_tests(self):
+        math = Subject.objects.create(name='Математика')
+        Topic.objects.create(subject=math, name='Теория остаётся')
+        MockTest.objects.create(subject=math, title='Пробный вариант')
+
+        call_command('import_content', self.write(mock_sample()), stdout=open('/dev/null', 'w'))
+
+        self.assertTrue(math.topics.filter(name='Теория остаётся').exists())
+        self.assertEqual(list(math.mock_tests.values_list('title', flat=True)), ['Вариант 1'])
+        test = math.mock_tests.get()
+        self.assertEqual(test.duration_minutes, 80)
+        multi = test.questions.get(type='multiple')
+        self.assertTrue(multi.is_correct(['-2', '2']))
+
+    def test_one_bad_file_does_not_block_the_others(self):
+        bad = mock_sample()
+        bad['mock_tests'][0]['questions'][0]['correct_answer'] = '5'
+        good = sample()
+        with self.assertRaises(CommandError):
+            call_command('import_content', self.write(bad), self.write(good), stdout=open('/dev/null', 'w'),
+                         stderr=open('/dev/null', 'w'))
+        self.assertTrue(Topic.objects.filter(name='Тригонометрические неравенства').exists())
+        self.assertFalse(MockTest.objects.exists())
+
+
+class BundledMockContentTests(TestCase):
+    """The committed mock-test files must import, and every figure they use must exist in the frontend."""
+
+    def test_mock_files_are_valid_and_import(self):
+        for name, subject, tests in [('math_mock.json', 'Математика', 5),
+                                     ('matgram_mock.json', 'Математическая грамотность', 20)]:
+            with self.subTest(file=name):
+                path = CONTENT / name
+                data = json.loads(path.read_text(encoding='utf-8'))
+                self.assertEqual(validate(data), [])
+                for test in data['mock_tests']:
+                    for q in test['questions']:
+                        for text in [q['prompt'], *q['options']]:
+                            self.assertEqual(text.count('$') % 2, 0, text)
+                            for img in re.findall(r'\[img:([^\]]+)\]', text):
+                                self.assertTrue((FRONTEND / img).is_file(), img)
+                call_command('import_content', str(path), stdout=open('/dev/null', 'w'))
+                self.assertEqual(MockTest.objects.filter(subject__name=subject).count(), tests)
+        self.assertEqual(MockQuestion.objects.count(), 225 + 198)
 
 
 class BundledMathContentTests(TestCase):

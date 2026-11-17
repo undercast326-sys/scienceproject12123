@@ -11,7 +11,7 @@ services:
     rootDir: backend
     plan: free
     buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput"
-    startCommand: "python manage.py migrate --noinput && python manage.py ensure_superuser && python manage.py seed_if_empty && (python manage.py import_content content/math.json || echo 'Content import failed, starting with the existing data') && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 4 --worker-class gthread --preload --timeout 60"
+    startCommand: "python manage.py migrate --noinput && python manage.py ensure_superuser && python manage.py seed_if_empty && (python manage.py import_content content/math.json content/math_mock.json content/matgram_mock.json || echo 'Content import failed, starting with the existing data') && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 4 --worker-class gthread --preload --timeout 60"
     healthCheckPath: /api/health/
     envVars:
       - key: PYTHON_VERSION

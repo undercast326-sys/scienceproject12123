@@ -35,21 +35,34 @@ function escapeHtml(str) {
 
 /* Text with $...$ formulas: plain parts are escaped, formulas go through KaTeX.
    Newlines become <br>. Falls back to escaped text if KaTeX failed to load. */
-function renderMath(tex) {
+function renderMath(tex, large = false) {
   if (!window.katex) return escapeHtml(tex);
   try {
-    return window.katex.renderToString(tex, { throwOnError: false, strict: false });
+    // Answer options use full-size fractions so small numerators stay readable.
+    return window.katex.renderToString(large ? `\\displaystyle ${tex}` : tex, { throwOnError: false, strict: false });
   } catch (e) {
     return escapeHtml(tex);
   }
 }
 
-function richText(str) {
+/* Figures in content are written as [img:content-img/...png] and served by the frontend itself. */
+const IMG_TOKEN = /\[img:(content-img\/[A-Za-z0-9_\-\/]+\.(?:png|jpe?g|gif|webp|svg))\]/g;
+
+function richText(str, large = false) {
   const s = str == null ? '' : String(str);
+  return s
+    .split(IMG_TOKEN)
+    .map((part, i) => (i % 2 ? `<img class="content-img" src="${part}" alt="Рисунок к заданию" loading="lazy">` : mathText(part, large)))
+    .join('')
+    .replace(/(<br>)+(<img)/g, '$2')
+    .replace(/(loading="lazy">)(<br>)+/g, '$1');
+}
+
+function mathText(s, large = false) {
   const parts = s.split('$');
   if (parts.length % 2 === 0) return escapeHtml(s).replace(/\n/g, '<br>');
   return parts
-    .map((part, i) => (i % 2 ? renderMath(part) : escapeHtml(part).replace(/\n/g, '<br>')))
+    .map((part, i) => (i % 2 ? renderMath(part, large) : escapeHtml(part).replace(/\n/g, '<br>')))
     .join('');
 }
 
@@ -643,7 +656,7 @@ function renderQuestion() {
       btn.className = 'option-btn';
       btn.style.setProperty('--i', i);
       btn.dataset.value = opt;
-      btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + i)}</span><span class="option-text">${richText(opt)}</span>`;
+      btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + i)}</span><span class="option-text">${richText(opt, true)}</span>`;
       btn.addEventListener('click', () => selectOption(opt, btn));
       optionsWrap.appendChild(btn);
     });
@@ -1048,7 +1061,7 @@ function renderMockQuestion() {
       btn.style.setProperty('--i', i);
       const selected = Array.isArray(current) ? current.includes(opt) : current === opt;
       if (selected) btn.classList.add('selected');
-      btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + i)}</span><span class="option-text">${richText(opt)}</span>`;
+      btn.innerHTML = `<span class="option-letter">${String.fromCharCode(65 + i)}</span><span class="option-text">${richText(opt, true)}</span>`;
       btn.addEventListener('click', () => {
         let next;
         if (q.type === 'multiple') {

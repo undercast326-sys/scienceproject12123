@@ -32,6 +32,16 @@ Topic names live in `TOPICS` in `tools/doc_import/build_math.py`.
 
 **Importing.** On every deploy, `python manage.py import_content content/math.json` runs at start. It does nothing if the file is unchanged since the last import. When the file changes, it **replaces all Математика topics**: tasks, paragraphs and students' progress on them. Edits made to those topics in the admin are lost too, so for lasting changes edit the `.doc` files (or the JSON) instead. Other subjects are not touched. Use `--force` to reimport an unchanged file.
 
+## Mock tests (ЕНТ variants)
+
+`backend/content/math_mock.json` holds 5 variants for Математика, with 40 tasks each. `backend/content/matgram_mock.json` holds 20 variants for Математическая грамотность, with 10 tasks each. Both were transcribed by hand from the PDF collection (the PDFs aren't committed), with formulas written in LaTeX.
+
+- **Matching tasks** (31–35 in Математика) are split into one single-choice question per item, so each mock has 45 questions.
+- **Multiple-choice tasks** (36–40) use type `multiple`.
+- **Figures** live in `frontend/content-img/mock/`. A prompt references one as `[img:content-img/mock/<file>.png]`.
+
+These files load through the same `import_content` command as `math.json`. A file that has only `mock_tests` replaces only that subject's mock tests: topics and theory are not touched. Each file is tracked separately, so changing one file reimports only that file.
+
 ## Deploy (Render)
 
 1. Push this folder to a new GitHub repo (see commands below).
